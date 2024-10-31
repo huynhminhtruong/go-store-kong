@@ -7,5 +7,4 @@ services:
         paths:
           - /books
         protocols:
-          - http
           - grpc

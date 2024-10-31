@@ -151,7 +151,7 @@ docker-compose up -d
 ```bash
 curl -i -X POST http://localhost:8001/services \
   --data "name=book_service" \
-  --data "url=grpc://book-service:50051"
+  --data "url=grpc://book:8082"
 ```
 
 - Tiếp theo, thêm route cho service:
