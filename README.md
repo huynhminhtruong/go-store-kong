@@ -1,140 +1,184 @@
 # go-store-kong
 
-Để triển khai một hệ thống microservice sử dụng Kong làm gateway để chuyển các yêu cầu HTTP đến các gRPC services được triển khai bằng Golang và Docker, bạn có thể làm theo các bước sau:
+Để minh họa cách gửi một yêu cầu thông qua Kong đến một gRPC service, hãy xem xét một ví dụ cụ thể với các bước từ việc cấu hình Kong cho đến việc gửi yêu cầu và nhận phản hồi
 
-### 1. **Cấu trúc dự án và dịch vụ**
+### **1. Cấu hình dịch vụ gRPC**
 
-- Tạo các service con dưới dạng Docker container. Mỗi service sẽ được đóng gói và chạy độc lập
-- Sử dụng Golang để triển khai các gRPC services, mỗi service sẽ có các chức năng riêng biệt
-- Sử dụng Kong làm gateway đặt ở layer trên cùng để nhận các HTTP request và chuyển đổi chúng thành các gRPC call đến các service bên dưới
+Giả sử bạn có một gRPC service đơn giản có tên là `BookService` như sau:
 
-### 2. **Triển khai gRPC Services với Golang**
+#### **File `book.proto`**
 
-- Tạo một module Go cho từng gRPC service. Mỗi service sẽ được định nghĩa trong một file `.proto` và sử dụng `protoc-gen-go` và `protoc-gen-go-grpc` để generate code Go cho các service đó.
-- Tạo các handler cho từng gRPC service để xử lý các API chính, ví dụ: `BookService`, `OrderService`.
-- Dockerize các gRPC service bằng cách tạo Dockerfile riêng cho mỗi service. Dockerfile cơ bản cho một gRPC service có thể như sau:
+```protobuf
+syntax = "proto3";
 
-  ```dockerfile
-  # Dockerfile cho gRPC service
-  FROM golang:1.20-alpine
-  WORKDIR /app
-  COPY . .
-  RUN go mod download
-  RUN go build -o service main.go
-  EXPOSE 50051
-  CMD ["./service"]
-  ```
+package book;
 
-- Trong file `main.go` của từng service, bạn cần khởi động gRPC server và chỉ định port để service có thể giao tiếp qua gRPC
+service BookService {
+    rpc GetBook (GetBookRequest) returns (BookResponse);
+}
 
-### 3. **Triển khai Kong Gateway cho gRPC Services**
+message GetBookRequest {
+    string id = 1;
+}
 
-- Dùng Kong làm gateway API và triển khai nó dưới dạng một Docker container
-- Tạo một Docker Compose để dễ dàng quản lý các container. Đối với Kong, bạn sẽ cần cấu hình để nó có thể lắng nghe các yêu cầu HTTP từ client và chuyển tiếp đến các gRPC services
+message BookResponse {
+    string title = 1;
+    string author = 2;
+}
+```
 
-  ```yaml
-  # docker-compose.yml
-  version: "3"
-  services:
-    kong:
-      image: kong:latest
-      environment:
-        KONG_DATABASE: "off"
-        KONG_DECLARATIVE_CONFIG: "/kong.yml"
-        KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
-      ports:
-        - "8000:8000" # HTTP Port
-        - "8443:8443" # HTTPS Port
-        - "8001:8001" # Admin API Port (optional)
-      volumes:
-        - ./kong.yml:/kong.yml
-  ```
+### **2. Triển khai gRPC Service bằng Go**
 
-- Trong file `kong.yml`, cấu hình các route và service. Ví dụ, bạn có thể định nghĩa các service gRPC để Kong có thể gọi đến từng gRPC service
+#### **File `main.go`**
 
-  ```yaml
-  _format_version: "2.1"
-  services:
-    - name: book_service
-      url: grpc://book-service:50051
-      routes:
-        - name: book_route
-          paths:
-            - /book
-          protocols:
-            - http
-            - https
+```go
+package main
 
-    - name: order_service
-      url: grpc://order-service:50052
-      routes:
-        - name: order_route
-          paths:
-            - /order
-          protocols:
-            - http
-            - https
-  ```
+import (
+    "context"
+    "log"
+    "net"
 
-### 4. **Docker Compose để quản lý toàn bộ hệ thống**
+    pb "path/to/your/proto/package" // Cập nhật đường dẫn đến package của bạn
+    "google.golang.org/grpc"
+)
 
-- Sử dụng Docker Compose để đồng thời khởi chạy các container của gRPC services và Kong. Đây là một ví dụ `docker-compose.yml` đầy đủ:
+type server struct {
+    pb.UnimplementedBookServiceServer
+}
 
-  ```yaml
-  version: "3"
-  services:
-    book-service:
-      build:
-        context: ./book-service
-      ports:
-        - "50051:50051"
-      networks:
-        - kong-net
+func (s *server) GetBook(ctx context.Context, req *pb.GetBookRequest) (*pb.BookResponse, error) {
+    // Giả lập dữ liệu
+    return &pb.BookResponse{
+        Title:  "The Great Gatsby",
+        Author: "F. Scott Fitzgerald",
+    }, nil
+}
 
-    order-service:
-      build:
-        context: ./order-service
-      ports:
-        - "50052:50052"
-      networks:
-        - kong-net
+func main() {
+    lis, err := net.Listen("tcp", ":50051")
+    if err != nil {
+        log.Fatalf("Failed to listen: %v", err)
+    }
 
-    kong:
-      image: kong:latest
-      environment:
-        KONG_DATABASE: "off"
-        KONG_DECLARATIVE_CONFIG: "/kong.yml"
-        KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
-      ports:
-        - "8000:8000"
-        - "8443:8443"
-      volumes:
-        - ./kong.yml:/kong.yml
-      depends_on:
-        - book-service
-        - order-service
-      networks:
-        - kong-net
+    grpcServer := grpc.NewServer()
+    pb.RegisterBookServiceServer(grpcServer, &server{})
 
-  networks:
-    kong-net:
-      driver: bridge
-  ```
+    log.Println("gRPC server is running on port 50051...")
+    if err := grpcServer.Serve(lis); err != nil {
+        log.Fatalf("Failed to serve: %v", err)
+    }
+}
+```
 
-### 5. **Cấu hình và Test**
+### **3. Dockerize gRPC Service**
 
-- Khi tất cả các container được khởi động, Kong sẽ lắng nghe ở cổng `8000` (HTTP) và chuyển tiếp yêu cầu đến các service gRPC thông qua `kong.yml`.
-- Test bằng cách gửi HTTP request đến Kong với đường dẫn `/book` hoặc `/order`. Kong sẽ chuyển đổi các request HTTP này thành gRPC request và chuyển tiếp đến `book-service` hoặc `order-service`
+#### **File `Dockerfile`**
 
-### 6. **Triển khai và giám sát**
+```dockerfile
+FROM golang:1.20-alpine
 
-- Đưa các dịch vụ lên production và đảm bảo giám sát hiệu suất của các gRPC services cũng như Kong Gateway. Sử dụng công cụ như Prometheus hoặc Grafana để theo dõi metric của các container
-- Thiết lập Kong Admin API (chạy trên cổng `8001`) để quản lý và giám sát các route và dịch vụ
+WORKDIR /app
+COPY . .
+RUN go mod download
+RUN go build -o book-service main.go
 
-### Lợi ích của cách triển khai
+EXPOSE 50051
+CMD ["./book-service"]
+```
 
-- **Độc lập và linh hoạt**: Mỗi service hoạt động độc lập và có thể mở rộng linh hoạt
-- **Dễ quản lý với Kong**: Gateway Kong chuyển đổi và quản lý traffic một cách dễ dàng và bảo mật
-- **Sử dụng Docker Compose**: Đơn giản hóa việc quản lý container và dễ dàng triển khai lại toàn bộ hệ thống nếu cần thiết
+### **4. Cấu hình Kong Gateway**
 
-Bằng cách làm theo các bước này, bạn sẽ có được một hệ thống microservice sử dụng Kong để quản lý traffic đến các gRPC services viết bằng Golang và được triển khai trên Docker
+#### **File `docker-compose.yml`**
+
+```yaml
+version: "3"
+services:
+  book-service:
+    build:
+      context: ./path/to/book-service
+    ports:
+      - "50051:50051"
+
+  kong:
+    image: kong:latest
+    environment:
+      KONG_DATABASE: "off"
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+    ports:
+      - "8000:8000" # Port cho HTTP
+      - "8443:8443" # HTTPS Port
+      - "8001:8001" # Port cho Admin API
+    networks:
+      - kong-net
+
+networks:
+  kong-net:
+    driver: bridge
+```
+
+### **5. Cấu hình các dịch vụ và route trong Kong**
+
+#### **File `kong.yml`**
+
+```yaml
+_format_version: "2.1"
+services:
+  - name: book_service
+    url: grpc://book-service:50051
+    routes:
+      - name: book_route
+        paths:
+          - /books
+        protocols:
+          - http
+          - grpc
+```
+
+### **6. Khởi động các dịch vụ**
+
+- Để khởi động dịch vụ, bạn chạy lệnh sau trong thư mục chứa file `docker-compose.yml`:
+
+```bash
+docker-compose up -d
+```
+
+### **7. Thêm dịch vụ và route vào Kong**
+
+- Sử dụng Admin API của Kong để cấu hình dịch vụ và route. Gửi yêu cầu POST đến `http://localhost:8001/services` để thêm service `book_service`:
+
+```bash
+curl -i -X POST http://localhost:8001/services \
+  --data "name=book_service" \
+  --data "url=grpc://book-service:50051"
+```
+
+- Tiếp theo, thêm route cho service:
+
+```bash
+curl -i -X POST http://localhost:8001/services/book_service/routes \
+  --data "paths[]=/books" \
+  --data "protocols[]=http" \
+  --data "protocols[]=grpc"
+```
+
+### **8. Gửi yêu cầu đến Kong**
+
+Giờ đây, bạn có thể gửi yêu cầu HTTP đến Kong để truy cập vào service gRPC. Ví dụ, gửi yêu cầu HTTP tới đường dẫn `/books` với phương thức POST để lấy thông tin sách:
+
+```bash
+curl -i -X POST http://localhost:8000/books \
+  --header "Content-Type: application/json" \
+  --data '{"id": "1"}'
+```
+
+### **Kết quả**
+
+- Kong sẽ chuyển đổi yêu cầu HTTP này thành yêu cầu gRPC và gửi đến `book-service`
+- Phản hồi từ gRPC service sẽ được chuyển đổi lại thành HTTP response và trả về cho client
+
+### **Kết luận**
+
+- Sử dụng Kong như một gateway để điều phối các yêu cầu HTTP đến các gRPC services là một cách hiệu quả để tích hợp cả hai giao thức
+- Bằng cách này, bạn có thể dễ dàng mở rộng và quản lý các service của mình mà không cần phải thay đổi cách client tương tác với chúng

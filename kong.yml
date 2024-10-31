@@ -1,0 +1,11 @@
+_format_version: "2.1"
+services:
+  - name: book_service
+    url: grpc://book:8082
+    routes:
+      - name: book_route
+        paths:
+          - /books
+        protocols:
+          - http
+          - grpc
