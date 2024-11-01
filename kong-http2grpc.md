@@ -12,7 +12,7 @@
      --data url=grpc://localhost:50051
    ```
 
-   - `grpc://localhost:50051` là địa chỉ gRPC service của service đang muốn trỏ tới(book-service)
+   - `grpc://localhost:50051` là địa chỉ gRPC service của service đang muốn trỏ tới(**localhost:8082** => trỏ tới grpc-book-service)
    - `name=grpc_service` là tên bạn đặt cho service trong Kong(**grpc_service=book_service**)
 
 2. **Tạo route cho service**: Route này sẽ định nghĩa cách Kong tiếp nhận các yêu cầu RESTful API và chuyển tiếp chúng đến service đã tạo ở trên
