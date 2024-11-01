@@ -68,6 +68,19 @@ curl -i http://localhost:8001/routes/{route_id}/plugins
 curl -i http://localhost:8001/routes/e615c9d7-dfb3-46bb-8f26-e272d7d2dd1e/plugins
 ```
 
+### Liệt kê tất cả các routes để tìm route_id:
+
+```bash
+curl -i -X GET http://localhost:8001/routes
+```
+
+### Lọc route cụ thể theo service:
+
+```bash
+curl -i -X GET http://localhost:8001/services/{service_name}/routes
+curl -i -X GET http://localhost:8001/services/book_service/routes
+```
+
 ### Cài Đặt Plugin Trên Route:
 
 ```bash
