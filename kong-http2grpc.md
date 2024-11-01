@@ -12,21 +12,21 @@
      --data url=grpc://localhost:50051
    ```
 
-   - `grpc://localhost:50051` là địa chỉ gRPC service của bạn
-   - `name=grpc_service` là tên bạn đặt cho service trong Kong
+   - `grpc://localhost:50051` là địa chỉ gRPC service của service đang muốn trỏ tới(book-service)
+   - `name=grpc_service` là tên bạn đặt cho service trong Kong(**name=book_service**)
 
 2. **Tạo route cho service**: Route này sẽ định nghĩa cách Kong tiếp nhận các yêu cầu RESTful API và chuyển tiếp chúng đến service đã tạo ở trên
 
-   Ví dụ, tạo route trỏ đến service `grpc_service`:
+   Ví dụ, tạo route trỏ đến service `grpc_service`(**name=book_service**):
 
    ```bash
    curl -i -X POST http://localhost:8001/services/grpc_service/routes \
      --data paths[]=/rest-to-grpc \
-     --data methods[]=POST
+     --data methods[]=GET
    ```
 
-   - `paths[]=/rest-to-grpc` xác định đường dẫn của API RESTful
-   - `methods[]=POST` xác định phương thức HTTP cho route này (có thể thay đổi nếu cần)
+   - `paths[]=/rest-to-grpc` xác định đường dẫn của API RESTful(**rest-to-grpc=/v1/books** => BookService.ListBooks service được define trong book.proto)
+   - `methods[]=GET` xác định phương thức HTTP cho route này (có thể thay đổi nếu cần)
 
 ### Bước 2: Cài đặt Plugin `grpc-web`
 
