@@ -77,7 +77,7 @@ Dưới đây là cách cấu hình cụ thể để ánh xạ yêu cầu REST �
      --data config.method=ListBooks
    ```
 
-   - `config.proto_path`: Đường dẫn đến file `book.proto` chứa các định nghĩa của service
+   - `config.proto_path`: Đường dẫn đến file `book.proto` chứa các định nghĩa của service => tạo thư mục trên server đang chạy Kong chứa file protobuf và sau đó add path của thư mục đó vào config
    - `config.package`: Tên package trong `book.proto` (nếu có). Nếu không có package, có thể để trống
    - `config.service`: Tên service mà bạn muốn gọi, ở đây là `BookService`
    - `config.method`: Tên method cụ thể, ví dụ `ListBooks`
