@@ -32,7 +32,19 @@
 
 Plugin này sẽ giúp chuyển đổi từ HTTP/REST sang gRPC request để tương thích với gRPC service của bạn
 
-1. **Cài đặt grpc-web plugin trên route**:
+1. Liệt kê tất cả các plugin đã được kích hoạt trên Kong bằng lệnh curl:
+   
+   ```bash
+   curl -i http://localhost:8001/plugins
+   curl -i -X GET http://localhost:8001/plugins/enabled
+   ```
+
+2. **Kiểm tra các installed plugins trên route**:
+   
+   ```bash
+   ```
+
+3. **Cài đặt grpc-web plugin trên route**:
 
    ```bash
    curl -i -X POST http://localhost:8001/routes/<route_id>/plugins \
