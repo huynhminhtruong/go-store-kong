@@ -70,17 +70,17 @@ Dưới đây là cách cấu hình cụ thể để ánh xạ yêu cầu REST �
 
    ```bash
    curl -i -X POST http://localhost:8001/routes/<route_id>/plugins \
-     --data name=grpc-gateway \
-     --data config.proto_path=/path/to/book.proto \
-     --data config.package=book_package \
-     --data config.service=BookService \
-     --data config.method=ListBooks
+     --data "name=grpc-gateway" \
+     --data "config.service=BookService" \
+     --data "config.method=ListBooks" \
+     --data "config.proto_path=/path/to/your/protos/book.proto" \
+     --data "config.package=your_package_name"
    ```
 
    - `config.proto_path`: Đường dẫn đến file `book.proto` chứa các định nghĩa của service => tạo thư mục trên server đang chạy Kong chứa file protobuf và sau đó add path của thư mục đó vào config
    - `config.package`: Tên package trong `book.proto` (nếu có). Nếu không có package, có thể để trống
-   - `config.service`: Tên service mà bạn muốn gọi, ở đây là `BookService`
-   - `config.method`: Tên method cụ thể, ví dụ `ListBooks`
+   - `config.service`: Tên service mà bạn muốn gọi(`BookService`)
+   - `config.method`: Tên method cụ thể(`ListBooks`)
 
    Lưu ý: Thay `<route_id>` bằng ID của route trỏ đến `grpc_service`
 
