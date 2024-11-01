@@ -1,10 +1,14 @@
-_format_version: "2.1"
+_format_version: "3.0"
 services:
-  - name: book_service
-    url: grpc://book:8082
-    routes:
-      - name: book_route
-        paths:
-          - /books
-        protocols:
-          - grpc
+- protocol: grpc
+ host: localhost
+ port: 8082
+ routes:
+ - protocols:
+   - name: http
+   paths:
+   - /
+   plugins:
+   - name: grpc-gateway
+     config:
+       proto: /home/projects/book-store-service/proto/book.proto
