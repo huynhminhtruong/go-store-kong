@@ -11,4 +11,5 @@ services:
    plugins:
    - name: grpc-gateway
      config:
-       proto: /home/projects/book-store-service/proto/book.proto
+       proto: /usr/local/kong/protos/book.proto # this path is created on Kong server
+       proto_path: /usr/local/kong/protos

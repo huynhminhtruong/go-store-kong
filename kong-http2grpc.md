@@ -17,16 +17,16 @@
 
 2. **Tạo route cho service**: Route này sẽ định nghĩa cách Kong tiếp nhận các yêu cầu RESTful API và chuyển tiếp chúng đến service đã tạo ở trên
 
-   Ví dụ, tạo route trỏ đến service `grpc_service`(**name=book_service**):
+Ví dụ, tạo route trỏ đến service `grpc_service`(**name=book_service**):
 
-   ```bash
-   curl -i -X POST http://localhost:8001/services/grpc_service/routes \
-     --data paths[]=/rest-to-grpc \
-     --data methods[]=GET
-   ```
+```bash
+curl -i -X POST http://localhost:8001/services/grpc_service/routes \
+  --data paths[]=/rest-to-grpc \
+  --data methods[]=GET
+```
 
-   - `paths[]=/rest-to-grpc` xác định đường dẫn của API RESTful(**rest-to-grpc=/v1/books** => BookService.ListBooks service được define trong book.proto)
-   - `methods[]=GET` xác định phương thức HTTP cho route này (có thể thay đổi nếu cần)
+- `paths[]=/rest-to-grpc` xác định đường dẫn của API RESTful(**rest-to-grpc=/v1/books** => BookService.ListBooks service được define trong book.proto)
+- `methods[]=GET` xác định phương thức HTTP cho route này (có thể thay đổi nếu cần)
 
 ### Bước 2: Cài đặt plugin `grpc-web`
 
@@ -34,29 +34,29 @@ Plugin này sẽ giúp chuyển đổi từ HTTP/REST sang gRPC request để t�
 
 1. Liệt kê tất cả các plugin đã được kích hoạt trên Kong bằng lệnh curl:
 
-   ```bash
-   curl -i http://localhost:8001/plugins
-   curl -i -X GET http://localhost:8001/plugins/enabled
-   ```
+```bash
+curl -i http://localhost:8001/plugins
+curl -i -X GET http://localhost:8001/plugins/enabled
+```
 
 2. **Kiểm tra các installed plugins trên route**:
 
-   ```bash
+```bash
 
-   ```
+```
 
 3. **Cài đặt grpc-web plugin trên route**:
 
-   ```bash
-   curl -i -X POST http://localhost:8001/routes/<route_id>/plugins \
-     --data name=grpc-web
-   ```
+```bash
+curl -i -X POST http://localhost:8001/routes/<route_id>/plugins \
+  --data name=grpc-web
+```
 
-   Thay `<route_id>` bằng ID của route bạn vừa tạo. Bạn có thể lấy ID của route này bằng lệnh:
+Thay `<route_id>` bằng ID của route bạn vừa tạo. Bạn có thể lấy ID của route này bằng lệnh:
 
-   ```bash
-   curl -X GET http://localhost:8001/routes
-   ```
+```bash
+curl -X GET http://localhost:8001/routes
+```
 
 ### Bước 3: Cài đặt plugin `grpc-gateway`
 
@@ -66,57 +66,57 @@ Dưới đây là cách cấu hình cụ thể để ánh xạ yêu cầu REST �
 
 1. **Thêm Plugin grpc-gateway vào Route**: Plugin này sẽ giúp Kong xác định các yêu cầu HTTP đến các method cụ thể trong gRPC service
 
-   Ví dụ, để cấu hình cho method `ListBooks`:
+Ví dụ, để cấu hình cho method `ListBooks`:
 
-   ```bash
-   curl -i -X POST http://localhost:8001/routes/<route_id>/plugins \
-     --data "name=grpc-gateway" \
-     --data "config.service=BookService" \
-     --data "config.method=ListBooks" \
-     --data "config.proto_path=/path/to/your/protos/book.proto" \
-     --data "config.package=your_package_name"
-   ```
+```bash
+curl -i -X POST http://localhost:8001/routes/<route_id>/plugins \
+--data "name=grpc-gateway" \
+--data "config.service=BookService" \
+--data "config.method=ListBooks" \
+--data "config.proto_path=/path/to/your/protos/book.proto" \
+--data "config.package=your_package_name"
+```
 
-   - `config.proto_path`: Đường dẫn đến file `book.proto` chứa các định nghĩa của service => tạo thư mục trên server đang chạy Kong chứa file protobuf và sau đó add path của thư mục đó vào config
-   - `config.package`: Tên package trong `book.proto` (nếu có). Nếu không có package, có thể để trống
-   - `config.service`: Tên service mà bạn muốn gọi(`BookService`)
-   - `config.method`: Tên method cụ thể(`ListBooks`)
+- `config.proto_path`: Đường dẫn đến file `book.proto` chứa các định nghĩa của service => tạo thư mục trên server đang chạy Kong chứa file protobuf và sau đó add path của thư mục đó vào config
+- `config.package`: Tên package trong `book.proto` (nếu có). Nếu không có package, có thể để trống
+- `config.service`: Tên service mà bạn muốn gọi(`BookService`)
+- `config.method`: Tên method cụ thể(`ListBooks`)
 
-   Lưu ý: Thay `<route_id>` bằng ID của route trỏ đến `grpc_service`
+Lưu ý: Thay `<route_id>` bằng ID của route trỏ đến `grpc_service`
 
 2. **Tạo route cho từng method của gRPC Service**: Nếu bạn có nhiều method, bạn cần tạo các route riêng biệt cho từng method, mỗi route lại cấu hình grpc-gateway plugin cho đúng method đó. Ví dụ:
 
-   - **Tạo route cho `Create` method**:
+- **Tạo route cho `Create` method**:
 
-     ```bash
-     curl -i -X POST http://localhost:8001/services/grpc_service/routes \
-       --data paths[]=/create-book \
-       --data methods[]=POST
+```bash
+curl -i -X POST http://localhost:8001/services/grpc_service/routes \
+--data paths[]=/create-book \
+--data methods[]=POST
 
-     curl -i -X POST http://localhost:8001/routes/<route_id_create>/plugins \
-       --data name=grpc-gateway \
-       --data config.proto_path=/path/to/book.proto \
-       --data config.package=book_package \
-       --data config.service=BookService \
-       --data config.method=Create
-     ```
+curl -i -X POST http://localhost:8001/routes/<route_id_create>/plugins \
+--data name=grpc-gateway \
+--data config.proto_path=/path/to/book.proto \
+--data config.package=book_package \
+--data config.service=BookService \
+--data config.method=Create
+```
 
-   - **Tạo route cho `GetBook` method**:
+- **Tạo route cho `GetBook` method**:
 
-     ```bash
-     curl -i -X POST http://localhost:8001/services/grpc_service/routes \
-       --data paths[]=/get-book \
-       --data methods[]=GET
+```bash
+curl -i -X POST http://localhost:8001/services/grpc_service/routes \
+--data paths[]=/get-book \
+--data methods[]=GET
 
-     curl -i -X POST http://localhost:8001/routes/<route_id_getbook>/plugins \
-       --data name=grpc-gateway \
-       --data config.proto_path=/path/to/book.proto \
-       --data config.package=book_package \
-       --data config.service=BookService \
-       --data config.method=GetBook
-     ```
+curl -i -X POST http://localhost:8001/routes/<route_id_getbook>/plugins \
+--data name=grpc-gateway \
+--data config.proto_path=/path/to/book.proto \
+--data config.package=book_package \
+--data config.service=BookService \
+--data config.method=GetBook
+```
 
-   Mỗi route tương ứng với một endpoint REST (ví dụ: `/create-book`, `/get-book`, v.v.), ánh xạ đến một method gRPC tương ứng
+Mỗi route tương ứng với một endpoint REST (ví dụ: `/create-book`, `/get-book`, v.v.), ánh xạ đến một method gRPC tương ứng
 
 ### Kiểm tra
 
@@ -124,19 +124,19 @@ Bạn có thể gửi yêu cầu đến các endpoint REST vừa tạo để ki�
 
 - **Tạo sách mới**:
 
-  ```bash
-  curl -X POST http://localhost:8000/create-book \
-    -H "Content-Type: application/json" \
-    -d '{ "title": "My New Book", "author": "Author Name" }'
-  ```
+```bash
+curl -X POST http://localhost:8000/create-book \
+-H "Content-Type: application/json" \
+-d '{ "title": "My New Book", "author": "Author Name" }'
+```
 
 - **Lấy thông tin sách**:
 
-  ```bash
-  curl -X GET http://localhost:8000/get-book \
-    -H "Content-Type: application/json" \
-    -d '{ "book_id": "123" }'
-  ```
+```bash
+curl -X GET http://localhost:8000/get-book \
+-H "Content-Type: application/json" \
+-d '{ "book_id": "123" }'
+```
 
 Cấu hình này sẽ cho phép Kong định tuyến chính xác đến từng method trong `BookService`
 
@@ -146,8 +146,8 @@ Gửi thử một yêu cầu HTTP POST đến endpoint `/rest-to-grpc` mà bạn
 
 ```bash
 curl -X POST http://localhost:8000/rest-to-grpc \
-  -H "Content-Type: application/json" \
-  -d '{ "key": "value" }'
+-H "Content-Type: application/json" \
+-d '{ "key": "value" }'
 ```
 
 ### Tổng quan các thành phần chính
@@ -155,3 +155,42 @@ curl -X POST http://localhost:8000/rest-to-grpc \
 - **Kong Service**: Trỏ đến địa chỉ của gRPC service
 - **Kong Route**: Định nghĩa endpoint RESTful và liên kết với service
 - **grpc-web Plugin**: Chuyển đổi yêu cầu HTTP thành gRPC để tương thích với backend
+
+# Basic config examples for gRPC-gateway
+
+## The following examples provide some typical configurations for enabling the grpc-gateway plugin on a service
+
+### Kong Admin API
+
+```bash
+curl -X POST http://localhost:8001/services/22a0da84-2317-4861-8366-1c3368e209f2/plugins \
+--header "accept: application/json" \
+--header "Content-Type: application/json" \
+--data '
+{
+  "name": "grpc-gateway",
+  "config": {
+    "proto": "/usr/local/kong/protos/book.proto"
+  }
+}'
+```
+
+- Replace SERVICE_NAME|ID with the id or name of the service that this plugin configuration will target
+- The target is paths = ["/v1/books/"]
+- SERVICE_NAME = null
+- SERVICE_ID = 22a0da84-2317-4861-8366-1c3368e209f2
+
+### Update config kong plugins
+
+```bash
+plugin_id = d9ec3dff-d0e0-4a58-bc31-24f970e2fb05
+curl -X PATCH http://localhost:8001/plugins/d9ec3dff-d0e0-4a58-bc31-24f970e2fb05 \
+--header "accept: application/json" \
+--header "Content-Type: application/json" \
+--data '
+{
+  "config": {
+    "proto": "/usr/local/kong/protos/book.proto"
+  }
+}'
+```
