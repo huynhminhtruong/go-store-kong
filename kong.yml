@@ -12,4 +12,6 @@ services:
    - name: grpc-gateway
      config:
        proto: /usr/local/kong/protos/book.proto # this path is created on Kong server
-       proto_path: /usr/local/kong/protos
+       proto_service: "bookservice.BookService"
+       host: "localhost:8082"  # address of gRPC book-service
+       pass_host: true
