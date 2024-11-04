@@ -194,3 +194,20 @@ curl -X PATCH http://localhost:8001/plugins/d9ec3dff-d0e0-4a58-bc31-24f970e2fb05
   }
 }'
 ```
+
+### Get list plugins đang được cài cho routes với [route_id = 5b5edc73-88a9-4382-9c58-4f2fc49ec964]
+
+curl -X GET http://localhost:8001/routes/5b5edc73-88a9-4382-9c58-4f2fc49ec964/plugins
+
+### Xóa plugin với [plugin_id = b6f28f8b-daf3-4e22-a0a8-08ea69ff6f64] ra khỏi [route_id = 5b5edc73-88a9-4382-9c58-4f2fc49ec964]
+
+curl -X DELETE http://localhost:8001/plugins/b6f28f8b-daf3-4e22-a0a8-08ea69ff6f64
+
+curl -X POST http://localhost:8001/routes/5b5edc73-88a9-4382-9c58-4f2fc49ec964/plugins \
+--header "Content-Type: application/json" \
+--data '{
+"name": "grpc-gateway",
+"config": {
+"proto": "/usr/local/kong/protos/book.proto"
+}
+}'
