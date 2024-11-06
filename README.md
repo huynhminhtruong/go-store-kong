@@ -154,6 +154,12 @@ docker-compose up -d
      --data "methods[]=GET"
    ```
 
+6. Xóa route theo ID
+
+   ```bash
+   curl -i -X DELETE http://localhost:8001/routes/${ROUTE_ID}
+   ```
+
 # Cấu hình các Plugin (Tùy chọn) 
 
 Kong có nhiều plugin có thể giúp bạn bảo mật và giám sát truy cập 
