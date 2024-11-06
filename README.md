@@ -1,4 +1,4 @@
-# Setup Kong bằng Docker-Compose
+# Setup Kong bằng Docker
 
 ### Bước 1: Cài đặt Kong
 
