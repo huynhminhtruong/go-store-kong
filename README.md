@@ -33,8 +33,8 @@
    docker run -d --name kong \
      --network=kong-net \
      -e "KONG_DATABASE=postgres" \
-     -e "KONG_PG_HOST=kong-database" \
-     -e "KONG_PG_PASSWORD=kong" \
+     -e "KONG_PG_HOST=postgresql" \
+     -e "KONG_PG_PASSWORD=postgres" \
      -e "KONG_PROXY_ACCESS_LOG=/dev/stdout" \
      -e "KONG_ADMIN_ACCESS_LOG=/dev/stdout" \
      -e "KONG_PROXY_ERROR_LOG=/dev/stderr" \
@@ -61,9 +61,9 @@ services:
   postgresql:
     image: postgres:13
     environment:
-      POSTGRES_USER: kong
-      POSTGRES_DB: kong
-      POSTGRES_PASSWORD: kong
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
     networks:
       - kong-net
 
@@ -82,7 +82,7 @@ services:
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: postgresql
-      KONG_PG_PASSWORD: kong
+      KONG_PG_PASSWORD: postgres
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
