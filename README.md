@@ -94,7 +94,7 @@ curl -i -X POST http://localhost:8001/services/book-service/plugins \
 ```
 
 
-# Add Kong vào service của Docker-Compose
+# Setup Kong thuộc service của Docker-Compose
 
 ### Bước 1: Cập nhật `docker-compose.yml`
 
@@ -149,7 +149,7 @@ networks:
 
 ### Bước 2: Khởi tạo Database cho Kong (Thực hiện thủ công một lần)
 
-Chạy lệnh sau để khởi tạo cơ sở dữ liệu cho Kong. Lệnh này chỉ cần chạy một lần và sẽ thực hiện sau khi khởi động các service trong `docker-compose.yml`.
+Chạy lệnh sau để khởi tạo cơ sở dữ liệu cho Kong. Lệnh này chỉ cần chạy một lần và sẽ thực hiện sau khi khởi động các service trong `docker-compose.yml`
 
 ```bash
 docker-compose run --rm kong kong migrations bootstrap
@@ -163,20 +163,4 @@ docker-compose up -d
 
 ### Bước 3: Cấu hình các Service và Route trong Kong
 
-Với Kong đã khởi động trong `docker-compose`, bạn có thể tạo các service và route trực tiếp thông qua lệnh `curl` như đã hướng dẫn trước đó.
-
-
-
-
-
-
-
-
-
-
-Ví dụ:
-```bash
-curl -i http://localhost:8000/book
-```
-
-Nếu bạn cấu hình đúng, request sẽ được chuyển tiếp tới `grpc-gateway` ở endpoint tương ứng
+Với Kong đã khởi động trong `docker-compose`, bạn có thể tạo các service và route trực tiếp thông qua lệnh `curl` như đã hướng dẫn trước đó
