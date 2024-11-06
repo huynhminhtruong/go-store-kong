@@ -68,12 +68,12 @@ services:
       - kong-net
 
   gateway:
-    # cấu hình của gateway của bạn để đăng ký các endpoint cho gRPC services
+    # gateway-service config
     networks:
       - kong-net
 
   book-service:
-    # cấu hình của dịch vụ book-service (gRPC service của bạn)
+    # grpc-service config
     networks:
       - kong-net
 
