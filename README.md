@@ -199,7 +199,45 @@ Với `kong.yml`, bạn có thể định nghĩa tất cả các service, route,
    deck sync --konnect-host=http://localhost:8001 --konnect-token=<Kong_admin_token>
    ```
 
-### Tóm lại
+### kong.yml config for book-service
 
-Nếu bạn chỉ cần cấu hình Kong cơ bản và không có nhu cầu quản lý nhiều endpoint, `kong.yml` là không cần thiết 
-Tuy nhiên, nếu bạn có nhiều cấu hình phức tạp hoặc muốn tự động hóa, `kong.yml` sẽ giúp ích nhiều
+```yaml
+_format_version: "1.1"
+services:
+  - name: book-service
+    url: http://gateway:8080  # URL của gateway đang proxy đến các endpoint gRPC được sinh bởi grpc-gateway
+    routes:
+      - name: create-book-route
+        paths:
+          - /v1/books
+        methods:
+          - POST
+      - name: list-books-route
+        paths:
+          - /v1/books
+        methods:
+          - GET
+      - name: get-book-route
+        paths:
+          - /v1/books/{book_id}
+        methods:
+          - GET
+```
+
+### Giải thích cấu hình
+
+- **Service** `book-service`:
+  - URL của service trỏ tới `http://gateway:8080`, đây là nơi `grpc-gateway` đang lắng nghe để chuyển tiếp request tới các phương thức gRPC trong `book-service`
+
+- **Routes**:
+  - `create-book-route`: Định nghĩa đường dẫn `/v1/books` với phương thức `POST` để tạo một cuốn sách
+  - `list-books-route`: Định nghĩa đường dẫn `/v1/books` với phương thức `GET` để lấy danh sách sách
+  - `get-book-route`: Định nghĩa đường dẫn `/v1/books/{book_id}` với phương thức `GET` để lấy thông tin của một cuốn sách cụ thể
+
+### Áp dụng cấu hình với decK
+
+Sau khi tạo file `kong.yml`, bạn có thể dùng lệnh sau để áp dụng cấu hình:
+
+```bash
+deck sync --kong-addr http://localhost:8001
+```
