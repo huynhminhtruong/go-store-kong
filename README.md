@@ -129,7 +129,7 @@ docker-compose up -d
    curl -i -X GET http://localhost:8001/services
    ```
 
-3. **Tạo Route** để xác định đường dẫn cho từng endpoint HTTP mà bạn muốn nhận từ Kong.
+2. **Tạo Route** để xác định đường dẫn cho từng endpoint HTTP mà bạn muốn nhận từ Kong.
 
    ```bash
    curl -i -X POST http://localhost:8001/services/book-service/routes \
@@ -145,7 +145,7 @@ docker-compose up -d
    curl -i -X GET http://localhost:8001/services/${SERVICE_NAME}/routes
    ```
 
-5. **Tùy chỉnh các route** để xác định các endpoint cụ thể nếu bạn có nhiều phương thức trong `BookService` (như `Create`, `GetBook`, `ListBooks`)
+3. **Tùy chỉnh các route** để xác định các endpoint cụ thể nếu bạn có nhiều phương thức trong `BookService` (như `Create`, `GetBook`, `ListBooks`)
 
    Ví dụ: để định tuyến `GET /book/{id}` tới `grpc-gateway`:
    ```bash
@@ -154,7 +154,7 @@ docker-compose up -d
      --data "methods[]=GET"
    ```
 
-6. Xóa route theo ID
+4. Xóa route theo ID
 
    ```bash
    curl -i -X DELETE http://localhost:8001/routes/${ROUTE_ID}
