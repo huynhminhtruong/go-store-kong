@@ -1,17 +1,20 @@
 _format_version: "3.0"
 services:
-- protocol: grpc
- host: localhost
- port: 8082
- routes:
- - protocols:
-   - name: http
-   paths:
-   - /
-   plugins:
-   - name: grpc-gateway
-     config:
-       proto: /usr/local/kong/protos/book.proto # this path is created on Kong server
-       proto_service: "book.BookService"
-       host: "localhost:8082"  # address of gRPC book-service
-       pass_host: true
+  - name: book-service
+    url: http://gateway:8081  # gateway url which is proxying to gRPC endpoints were gen by grpc-gateway
+    routes:
+      - name: create-book-route
+        paths:
+          - /v1/books
+        methods:
+          - POST
+      - name: list-books-route
+        paths:
+          - /v1/books
+        methods:
+          - GET
+      - name: get-book-route
+        paths:
+          - /v1/books/{book_id}
+        methods:
+          - GET
