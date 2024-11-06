@@ -45,9 +45,6 @@
      kong/kong-gateway:latest
    ```
 
-
-
-
 # Setup Kong thuộc service của Docker-Compose
 
 ### Bước 1: Cập nhật `docker-compose.yml`
@@ -161,3 +158,48 @@ curl -i -X POST http://localhost:8001/services/book-service/plugins \
   --data "name=rate-limiting" \
   --data "config.second=5"
 ```
+
+# Sử dụng kong.yml để config các service và route
+
+File `kong.yml` không bắt buộc để khởi động và cấu hình cơ bản cho Kong
+nhưng có thể hữu ích nếu bạn muốn quản lý cấu hình Kong một cách dễ dàng hơn
+đặc biệt khi bạn muốn tự động hoá việc tạo các **Service**, **Route**, và **Plugin** trên Kong
+
+`kong.yml` là một file cấu hình có thể được dùng với công cụ **decK** (một công cụ CLI quản lý cấu hình Kong)
+Với `kong.yml`, bạn có thể định nghĩa tất cả các service, route, và plugin của Kong trong một file duy nhất, sau đó áp dụng chúng chỉ bằng một lệnh
+
+### Khi nào nên dùng `kong.yml`?
+
+1. **Quản lý cấu hình dễ dàng hơn**: Thay vì dùng các lệnh `curl` thủ công để tạo từng service và route, bạn có thể quản lý tất cả cấu hình trong một file `kong.yml`
+2. **Tự động hóa và kiểm soát phiên bản**: Nếu bạn có nhiều cấu hình và muốn kiểm soát phiên bản hoặc dễ dàng triển khai lại cấu hình khi có thay đổi, `kong.yml` rất hữu ích
+3. **Di chuyển và sao lưu**: File này giúp bạn dễ dàng di chuyển cấu hình Kong giữa các môi trường (dev, staging, production)
+
+### Cách dùng `kong.yml` với decK
+
+1. **Cài đặt decK** (nếu chưa có):
+   ```bash
+   curl -L https://github.com/kong/deck/releases/download/v1.7.0/deck_1.7.0_linux_amd64.tar.gz | tar xvz
+   sudo mv deck /usr/local/bin/
+   ```
+
+2. **Tạo file `kong.yml`** với nội dung mẫu:
+   ```yaml
+   _format_version: "1.1"
+   services:
+     - name: book-service
+       url: http://gateway:8080
+       routes:
+         - name: book-route
+           paths:
+             - /book
+   ```
+
+3. **Áp dụng file `kong.yml`** bằng lệnh:
+   ```bash
+   deck sync --konnect-host=http://localhost:8001 --konnect-token=<Kong_admin_token>
+   ```
+
+### Tóm lại
+
+Nếu bạn chỉ cần cấu hình Kong cơ bản và không có nhu cầu quản lý nhiều endpoint, `kong.yml` là không cần thiết 
+Tuy nhiên, nếu bạn có nhiều cấu hình phức tạp hoặc muốn tự động hóa, `kong.yml` sẽ giúp ích nhiều
