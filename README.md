@@ -45,53 +45,7 @@
      kong/kong-gateway:latest
    ```
 
-### Bước 2: Cấu hình các Service và Route trong Kong
 
-Bây giờ, bạn cần cấu hình Kong để định tuyến các request HTTP tới các endpoint HTTP của dịch vụ gRPC thông qua `grpc-gateway`
-
-1. **Tạo Service** trong Kong cho từng dịch vụ backend (gRPC gateway endpoint)
-
-   Ví dụ: nếu bạn có một dịch vụ `BookService` và `grpc-gateway` đã tạo các endpoint HTTP tại `http://<grpc-gateway>:8080`, bạn có thể cấu hình như sau:
-
-   ```bash
-   curl -i -X POST http://localhost:8001/services \
-     --data "name=book-service" \
-     --data "url=http://<grpc-gateway>:8080"
-   ```
-
-2. **Tạo Route** để xác định đường dẫn cho từng endpoint HTTP mà bạn muốn nhận từ Kong.
-
-   ```bash
-   curl -i -X POST http://localhost:8001/services/book-service/routes \
-     --data "paths[]=/book" \
-     --data "strip_path=false"
-   ```
-
-   Thao tác này sẽ cấu hình một route `/book` trong Kong. Khi có một request đến `http://kong-host:8000/book`, Kong sẽ chuyển tiếp tới `http://<grpc-gateway>:8080/book`
-
-3. **Tùy chỉnh các route** để xác định các endpoint cụ thể nếu bạn có nhiều phương thức trong `BookService` (như `Create`, `GetBook`, `ListBooks`)
-
-   Ví dụ: để định tuyến `GET /book/{id}` tới `grpc-gateway`:
-   ```bash
-   curl -i -X POST http://localhost:8001/services/book-service/routes \
-     --data "paths[]=/book/{id}" \
-     --data "methods[]=GET"
-   ```
-
-### Bước 3: Cấu hình các Plugin (Tùy chọn)
-
-Kong có nhiều plugin có thể giúp bạn bảo mật và giám sát truy cập. Một số plugin hữu ích bao gồm:
-
-- **Rate Limiting**: Để hạn chế lưu lượng truy cập đến các dịch vụ
-- **Authentication**: Áp dụng OAuth2, API key, hoặc Basic Auth để kiểm soát quyền truy cập
-- **Logging**: Để ghi lại thông tin truy cập và giúp kiểm soát chất lượng dịch vụ
-
-Ví dụ để cài đặt plugin `Rate Limiting`:
-```bash
-curl -i -X POST http://localhost:8001/services/book-service/plugins \
-  --data "name=rate-limiting" \
-  --data "config.second=5"
-```
 
 
 # Setup Kong thuộc service của Docker-Compose
@@ -161,6 +115,49 @@ Sau khi lệnh này hoàn tất, bạn có thể khởi động lại toàn bộ
 docker-compose up -d
 ```
 
-### Bước 3: Cấu hình các Service và Route trong Kong
+# Cấu hình các Service và Route trong Kong
 
-Với Kong đã khởi động trong `docker-compose`, bạn có thể tạo các service và route trực tiếp thông qua lệnh `curl` như đã hướng dẫn trước đó
+1. **Tạo Service** trong Kong cho từng dịch vụ backend (gRPC gateway endpoint)
+
+   Ví dụ: nếu bạn có một dịch vụ `BookService` và `grpc-gateway` đã tạo các endpoint HTTP tại `http://<grpc-gateway>:8080`, bạn có thể cấu hình như sau:
+
+   ```bash
+   curl -i -X POST http://localhost:8001/services \
+     --data "name=book-service" \
+     --data "url=http://<grpc-gateway>:8080"
+   ```
+
+2. **Tạo Route** để xác định đường dẫn cho từng endpoint HTTP mà bạn muốn nhận từ Kong.
+
+   ```bash
+   curl -i -X POST http://localhost:8001/services/book-service/routes \
+     --data "paths[]=/book" \
+     --data "strip_path=false"
+   ```
+
+   Thao tác này sẽ cấu hình một route `/book` trong Kong. Khi có một request đến `http://kong-host:8000/book`, Kong sẽ chuyển tiếp tới `http://<grpc-gateway>:8080/book`
+
+3. **Tùy chỉnh các route** để xác định các endpoint cụ thể nếu bạn có nhiều phương thức trong `BookService` (như `Create`, `GetBook`, `ListBooks`)
+
+   Ví dụ: để định tuyến `GET /book/{id}` tới `grpc-gateway`:
+   ```bash
+   curl -i -X POST http://localhost:8001/services/book-service/routes \
+     --data "paths[]=/book/{id}" \
+     --data "methods[]=GET"
+   ```
+
+# Cấu hình các Plugin (Tùy chọn) 
+
+Kong có nhiều plugin có thể giúp bạn bảo mật và giám sát truy cập 
+Một số plugin hữu ích bao gồm:
+
+- **Rate Limiting**: Để hạn chế lưu lượng truy cập đến các dịch vụ
+- **Authentication**: Áp dụng OAuth2, API key, hoặc Basic Auth để kiểm soát quyền truy cập
+- **Logging**: Để ghi lại thông tin truy cập và giúp kiểm soát chất lượng dịch vụ
+
+Ví dụ để cài đặt plugin `Rate Limiting`:
+```bash
+curl -i -X POST http://localhost:8001/services/book-service/plugins \
+  --data "name=rate-limiting" \
+  --data "config.second=5"
+```
