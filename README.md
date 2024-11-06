@@ -1,3 +1,5 @@
+# Setup Kong bằng Docker-Compose
+
 ### Bước 1: Cài đặt Kong
 
 1. Nếu bạn đã cài đặt Kong bằng Docker, hãy chắc chắn rằng bạn đã thiết lập một network để liên kết Kong với các dịch vụ khác
@@ -91,9 +93,86 @@ curl -i -X POST http://localhost:8001/services/book-service/plugins \
   --data "config.second=5"
 ```
 
-### Kiểm tra cấu hình
 
-Sau khi hoàn tất cấu hình, bạn có thể kiểm tra bằng cách gửi các HTTP request đến Kong và xem liệu request có được chuyển đến `grpc-gateway` như mong muốn không
+# Add Kong vào service của Docker-Compose
+
+### Bước 1: Cập nhật `docker-compose.yml`
+
+Trong file `docker-compose.yml`, thêm các service như sau:
+
+```yaml
+version: '3.8'
+
+services:
+  postgresql:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kong
+    networks:
+      - kong-net
+
+  gateway:
+    # cấu hình của gateway của bạn để đăng ký các endpoint cho gRPC services
+    networks:
+      - kong-net
+
+  book-service:
+    # cấu hình của dịch vụ book-service (gRPC service của bạn)
+    networks:
+      - kong-net
+
+  kong:
+    image: kong/kong-gateway:latest
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: postgresql
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    depends_on:
+      - postgresql
+    networks:
+      - kong-net
+    ports:
+      - "8000:8000"  # cổng proxy
+      - "8001:8001"  # cổng admin
+
+networks:
+  kong-net:
+    driver: bridge
+```
+
+### Bước 2: Khởi tạo Database cho Kong (Thực hiện thủ công một lần)
+
+Chạy lệnh sau để khởi tạo cơ sở dữ liệu cho Kong. Lệnh này chỉ cần chạy một lần và sẽ thực hiện sau khi khởi động các service trong `docker-compose.yml`.
+
+```bash
+docker-compose run --rm kong kong migrations bootstrap
+```
+
+Sau khi lệnh này hoàn tất, bạn có thể khởi động lại toàn bộ dịch vụ bằng lệnh:
+
+```bash
+docker-compose up -d
+```
+
+### Bước 3: Cấu hình các Service và Route trong Kong
+
+Với Kong đã khởi động trong `docker-compose`, bạn có thể tạo các service và route trực tiếp thông qua lệnh `curl` như đã hướng dẫn trước đó.
+
+
+
+
+
+
+
+
+
 
 Ví dụ:
 ```bash
