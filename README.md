@@ -139,13 +139,32 @@ docker-compose up -d
 
    Thao tác này sẽ cấu hình một route `/book` trong Kong. Khi có một request đến `http://kong-host:8000/book`, Kong sẽ chuyển tiếp tới `http://<grpc-gateway>:8080/book`
 
+   ```bash
+   `strip_path` trong cấu hình route của Kong xác định liệu Kong có nên xóa phần đường dẫn (path) đã khớp từ URL trước khi chuyển tiếp request đến dịch vụ backend hay không
+
+   - **Nếu `strip_path=false`**: Kong sẽ giữ nguyên đường dẫn gốc trong request khi chuyển tiếp đến backend
+   - **Nếu `strip_path=true`**: Kong sẽ xóa phần đường dẫn đã khớp từ request trước khi chuyển tiếp đến backend
+   
+   ### Ví dụ minh họa
+   
+   Giả sử bạn cấu hình một route với `paths[]=/book` và `strip_path=true`, và người dùng gửi request đến `http://kong-host:8000/book/123`:
+   - Với `strip_path=true`: Kong sẽ chuyển tiếp request đến `http://backend-host/123` (bỏ phần `/book`)
+   - Với `strip_path=false`: Kong sẽ giữ nguyên đường dẫn và chuyển tiếp đến `http://backend-host/book/123`
+   
+   ### Trong ngữ cảnh của bạn
+   
+   Vì bạn đang sử dụng `grpc-gateway` để chuyển đổi gRPC sang HTTP, tùy thuộc vào việc `grpc-gateway` có yêu cầu chính xác cấu trúc đường dẫn nào, bạn có thể điều chỉnh `strip_path`:
+   - **Nếu `grpc-gateway` yêu cầu toàn bộ đường dẫn**, bạn nên đặt `strip_path=false`
+   - **Nếu `grpc-gateway` không cần phần `/book`**, thì `strip_path=true` có thể giúp loại bỏ nó khi chuyển tiếp request
+   ```
+
    Lấy danh sách các routes của 1 service cụ thể:
 
    ```bash
    curl -i -X GET http://localhost:8001/services/${SERVICE_NAME}/routes
    ```
 
-3. **Tùy chỉnh các route** để xác định các endpoint cụ thể nếu bạn có nhiều phương thức trong `BookService` (như `Create`, `GetBook`, `ListBooks`)
+4. **Tùy chỉnh các route** để xác định các endpoint cụ thể nếu bạn có nhiều phương thức trong `BookService` (như `Create`, `GetBook`, `ListBooks`)
 
    Ví dụ: để định tuyến `GET /book/{id}` tới `grpc-gateway`:
    ```bash
@@ -154,7 +173,7 @@ docker-compose up -d
      --data "methods[]=GET"
    ```
 
-4. Xóa route theo ID
+5. Xóa route theo ID
 
    ```bash
    curl -i -X DELETE http://localhost:8001/routes/${ROUTE_ID}
