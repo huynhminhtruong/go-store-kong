@@ -11,3 +11,6 @@ kong-admin-get-services:
 # get list of created routes of specific service
 kong-admin-get-routes:
 	@curl -i -X GET ${KONG_ADMIN_DASHBOARD}/services/${SERVICE}/routes
+
+kong-admin-delete-route:
+	@curl -i -X DELETE ${KONG_ADMIN_DASHBOARD}/routes/${ROUTE_ID}
